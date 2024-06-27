@@ -7,5 +7,5 @@ llama-index-embeddings-huggingface== 0.2.2 # https://pypi.org/project/llama-inde
 python-dotenv==1.0.1 # https://pypi.org/project/python-dotenv/
 
 ### Stuff for Evals ###
-litellm>=1.25.2 # https://pypi.org/project/litellm/
+litellm==1.40.28 # https://pypi.org/project/litellm/
 trulens-eval==0.32.0 # https://pypi.org/project/trulens-eval/

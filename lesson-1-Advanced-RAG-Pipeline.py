@@ -18,8 +18,8 @@ import sys
 load_dotenv()
 
 # Configure logging for detailed output. Adjust or disable for less verbosity.
-# logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-# logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
 model=os.getenv("MODEL")
 base_url=os.getenv("BASE_OLLAMA_URL")
@@ -103,33 +103,79 @@ from trulens_eval import (
 from trulens_eval.feedback import GroundTruthAgreement
 from trulens_eval.feedback.provider.litellm import LiteLLM
 import numpy as np
+import pandas as pd
 
 print("Evaluating the model...\n\n#######\n")
 tru = Tru()
 tru.reset_database() # This is needed in order to resolve some bug with setting the right ollama url
 
-
-litellm_provider = LiteLLM()
+from trulens_eval.feedback.provider.endpoint import LiteLLMEndpoint
+# provider = LiteLLM()
 provider = LiteLLM(
-    model_engine=f"ollama/{model}", 
-    endpoint=base_url
+    model_engine="ollama/llama3:8b-instruct-fp16", 
+    endpoint="http://localhost:11435"
 )
+# endpoint = LiteLLMEndpoint(litellm_provider="ollama")
+# provider = LiteLLM(
+#     # model_engine=f"ollama/{model}", llama3:8b-instruct-fp16
+#     # model_engine=f"ollama/llama3:8b-instruct-fp16",
+#     model_engine="ollama/llama3",
+#     # api_endpoint=base_url
+# )
+# provider = LiteLLM()
+
+# provider.set_verbose=True
+
+# from trulens_eval import OpenAI as fOpenAI
+# provider = fOpenAI(
+#     api_key="sk-....."
+# )
 
 f_qa_relevance = Feedback(
     provider.relevance_with_cot_reasons,
     name="Answer Relevance"
 ).on_input_output()
 
+context_selection = TruLlama.select_source_nodes().node.text
 
+f_qs_relevance = (
+    Feedback(provider.qs_relevance_with_cot_reasons,
+             name="Context Relevance")
+    .on_input()
+    .on(context_selection)
+    .aggregate(np.mean)
+)
+
+# grounded = GroundTruthAgreement(groundedness_provider=provider)
+
+# f_groundedness = (
+#     Feedback(grounded.groundedness_measure_with_cot_reasons,
+#              name="ground_truth"
+#             )
+#     .on(context_selection)
+#     .on_output()
+#     .aggregate(grounded.grounded_statements_aggregator)
+# )
+
+golden_set = [
+    {"query": "who invented the lightbulb?", "response": "Thomas Edison"},
+    {"query": "¿quien invento la bombilla?", "response": "Thomas Edison"}
+]
+
+f_groundtruth = Feedback(
+    GroundTruthAgreement( golden_set, provider ).agreement_measure, 
+    name = "Ground Truth"
+).on_input_output()
 
 tru_recorder = TruLlama(
     query_engine,
-    app_id="Direct Query Engine",
+    app_id="App_1",
         feedbacks=[
-        f_qa_relevance
+        f_qa_relevance,
+        f_qs_relevance,
+        f_groundtruth
     ]
 )
-
 
 eval_questions = []
 # with open('eval_questions.txt', 'r') as file:
@@ -142,10 +188,23 @@ eval_questions.append("How can I be successful in AI?")
 
 print(eval_questions)
 
+print("\n#######\nRunning evals")
 with tru_recorder as recording:
     for question in eval_questions:
+        print(f"Eval Query: {question}")
         response = query_engine.query(question)
 
+records, feedback = tru.get_records_and_feedback(app_ids=[])
+records.head()
+
+print("\n#######\nFinished Running evals")
+
+pd.set_option("display.max_colwidth", None)
+records[["input", "output"] + feedback]
+
+tru.get_leaderboard(app_ids=[])
+
+tru.run_dashboard()
 
 #### Old Stuff ###############################################################
 

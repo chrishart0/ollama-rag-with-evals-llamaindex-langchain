@@ -253,3 +253,8 @@ qdrant_data/
 data/Kubernetes/
 qdrant_data/meta.json
 0-advanced-rag-and-evals/utils.py
+
+# true-lens evals
+.sqlite
+.streamlit
+default.sqlite
