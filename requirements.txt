@@ -1,0 +1,11 @@
+llama-index==0.10.50 # https://pypi.org/project/llama-index/
+ollama==0.2.1 # https://pypi.org/project/ollama/
+llama-index-llms-ollama==0.1.5 # https://pypi.org/project/llama-index-llms-ollama/
+llama-index-embeddings-huggingface== 0.2.2 # https://pypi.org/project/llama-index-embeddings-huggingface/
+
+### Quality of life tooling ###
+python-dotenv==1.0.1 # https://pypi.org/project/python-dotenv/
+
+### Stuff for Evals ###
+litellm>=1.25.2 # https://pypi.org/project/litellm/
+trulens-eval==0.32.0 # https://pypi.org/project/trulens-eval/
