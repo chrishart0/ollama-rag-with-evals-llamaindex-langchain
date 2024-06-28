@@ -70,25 +70,13 @@ query_engine = index.as_query_engine()
 # Query the Model with naive rag
 ####################################################################################
 
-
+# Commented out because we are using trulens for evals, you can use this to query the model
 # print("\n#######\nQuerying the model...\n")
 # query = "What are steps to take when finding projects to build your experience?"
 # print(f"Query: {query}")
 # response = query_engine.query(query)
 # print(f"Response: {response}")
 # print("\n#######\n")
-
-
-####################################################################################
-### Sentence Window ###
-####################################################################################
-
-from llama_index.core import Document
-
-document = Document(text="\n\n".\
-                    join([doc.text for doc in documents]))
-
-
 
 
 ####################################################################################
@@ -101,7 +89,6 @@ from trulens_eval import (
     TruLlama
 )
 from trulens_eval.feedback import GroundTruthAgreement
-from trulens_eval.feedback.provider.litellm import LiteLLM
 import numpy as np
 import pandas as pd
 
@@ -110,7 +97,8 @@ tru = Tru()
 tru.reset_database() # This is needed in order to resolve some bug with setting the right ollama url
 
 # NOTE: Cannot get the LiteLLM to work with the ollama model, simply doesn't give any feedback
-from trulens_eval.feedback.provider.endpoint import LiteLLMEndpoint
+# from trulens_eval.feedback.provider.litellm import LiteLLM
+# from trulens_eval.feedback.provider.endpoint import LiteLLMEndpoint
 # provider = LiteLLM()
 # provider = LiteLLM(
 #     model_engine="ollama/llama3:8b-instruct-fp16", 
@@ -125,11 +113,8 @@ from trulens_eval.feedback.provider.endpoint import LiteLLMEndpoint
 # )
 # provider = LiteLLM()
 
-# provider.set_verbose=True
-
-from trulens_eval import OpenAI as fOpenAI
-provider = fOpenAI(
-)
+from trulens_eval import OpenAI
+provider = OpenAI(model_engine="gpt-3.5-turbo")
 
 f_qa_relevance = Feedback(
     provider.relevance_with_cot_reasons,
@@ -146,6 +131,7 @@ f_qs_relevance = (
     .aggregate(np.mean)
 )
 
+# ToDo: Get groundedness to work
 # grounded = GroundTruthAgreement(groundedness_provider=provider)
 
 # f_groundedness = (
@@ -173,16 +159,16 @@ tru_recorder = TruLlama(
         feedbacks=[
         f_qa_relevance,
         f_qs_relevance,
-        f_groundtruth
+        # f_groundtruth
     ]
 )
 
 eval_questions = []
-# with open('eval_questions.txt', 'r') as file:
-#     for line in file:
-#         # Remove newline character and convert to integer
-#         item = line.strip()
-#         eval_questions.append(item)
+with open('eval_questions.txt', 'r') as file:
+    for line in file:
+        # Remove newline character and convert to integer
+        item = line.strip()
+        eval_questions.append(item)
 
 eval_questions.append("How can I be successful in AI?")
 
@@ -205,90 +191,3 @@ records[["input", "output"] + feedback]
 tru.get_leaderboard(app_ids=[])
 
 tru.run_dashboard()
-
-#### Old Stuff ###############################################################
-
-# eval_questions = []
-# with open('eval_questions.txt', 'r') as file:
-#     for line in file:
-#         # Remove newline character and convert to integer
-#         item = line.strip()
-#         print(item)
-#         eval_questions.append(item)
-
-# tru = Tru()
-# tru.reset_database() # This is needed in order to resolve some bug with setting the right ollama url
-
-# litellm_provider = LiteLLM()
-# provider = LiteLLM(
-#     model_engine=f"ollama/{model}", 
-#     endpoint=base_url
-# )
-
-# qa_relevance = (
-#     Feedback(provider.relevance_with_cot_reasons, name="Answer Relevance")
-#     .on_input_output()
-# )
-
-# qs_relevance = (
-#     Feedback(provider.relevance_with_cot_reasons, name = "Context Relevance")
-#     .on_input()
-#     .on(TruLlama.select_source_nodes().node.text)
-#     .aggregate(np.mean)
-# )
-
-# # ToDo: Get Groundedness working
-# from trulens_eval.feedback import Groundedness
-# grounded = Groundedness(groundedness_provider=provider)
-
-# groundedness = (
-#     Feedback(grounded.groundedness_measure_with_cot_reasons, name="Groundedness")
-#         .on(TruLlama.select_source_nodes().node.text)
-#         .on_output()
-#         .aggregate(grounded.grounded_statements_aggregator)
-# )
-
-# f_groundedness = (
-#     Feedback(provider.groundedness_measure_with_cot_reasons, name = "Groundedness")
-#     .on(TruLlama.select_source_nodes().node.text)
-#     .on_output()
-#     .aggregate(grounded.grounded_statements_aggregator)
-# )
-
-# f_groundedness = (
-#     Feedback(provider.groundedness_measure_with_cot_reasons, name = "Groundedness")
-#     .on(Select.RecordCalls.retrieve.rets.collect())
-#     .on_output()
-# )
-
-# huggingface_provider = Huggingface()
-# groundedness_hug = Groundedness(groundedness_provider=huggingface_provider)
-# f_groundedness_hug = Feedback(groundedness_hug.groundedness_measure, name = "Groundedness Huggingface").on_input().on_output().aggregate(groundedness_hug.grounded_statements_aggregator)
-# def wrapped_groundedness_hug(input, output):
-#     return np.mean(list(f_groundedness_hug(input, output)[0].values()))
-
-# # feedbacks = [qa_relevance, qs_relevance, groundedness]
-# feedbacks = [qa_relevance, qs_relevance]
-# feedbacks = [qa_relevance]
-
-# def get_prebuilt_trulens_recorder(query_engine, app_id):
-#     tru_recorder = TruLlama(
-#         query_engine,
-#         app_id=app_id,
-#         feedbacks=feedbacks
-#         )
-#     return tru_recorder
-
-# tru_recorder = get_prebuilt_trulens_recorder(query_engine,
-#                                              app_id="Direct Query Engine")
-
-# with tru_recorder as recording:
-#     for question in eval_questions:
-#         response = query_engine.query(question)
-
-# records, feedback = tru.get_records_and_feedback(app_ids=[])
-
-# records.head()
-
-# # launches on http://localhost:8501/
-# tru.run_dashboard()
