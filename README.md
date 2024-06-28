@@ -6,6 +6,16 @@ Relevant learning materials
 ![Basic LangChain Agent](images/basic-agent-use.gif)
 
 ## Setup
+
+### 0) Setup the .env file
+```bash
+cp .env.example .env
+```
+
+Now fill out the .env file:
+* You will need to specify the url for ollama if you already have it setup, or follow the prepare ollama step below if not. Make sure afterward that the port is right
+* You will need to set the OPENAI_API_KEY since it used to run the evals
+
 ### 1) Prepare the ollama
 * Follow the official docs to get setup: <https://github.com/ollama/ollama>
 * Ensure you have the needed model pulled down

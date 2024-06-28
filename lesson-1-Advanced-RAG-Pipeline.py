@@ -109,12 +109,13 @@ print("Evaluating the model...\n\n#######\n")
 tru = Tru()
 tru.reset_database() # This is needed in order to resolve some bug with setting the right ollama url
 
+# NOTE: Cannot get the LiteLLM to work with the ollama model, simply doesn't give any feedback
 from trulens_eval.feedback.provider.endpoint import LiteLLMEndpoint
 # provider = LiteLLM()
-provider = LiteLLM(
-    model_engine="ollama/llama3:8b-instruct-fp16", 
-    endpoint="http://localhost:11435"
-)
+# provider = LiteLLM(
+#     model_engine="ollama/llama3:8b-instruct-fp16", 
+#     endpoint="http://localhost:11435"
+# )
 # endpoint = LiteLLMEndpoint(litellm_provider="ollama")
 # provider = LiteLLM(
 #     # model_engine=f"ollama/{model}", llama3:8b-instruct-fp16
@@ -126,10 +127,9 @@ provider = LiteLLM(
 
 # provider.set_verbose=True
 
-# from trulens_eval import OpenAI as fOpenAI
-# provider = fOpenAI(
-#     api_key="sk-....."
-# )
+from trulens_eval import OpenAI as fOpenAI
+provider = fOpenAI(
+)
 
 f_qa_relevance = Feedback(
     provider.relevance_with_cot_reasons,
