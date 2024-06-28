@@ -98,8 +98,8 @@ provider = OpenAI()
 # NOTE: This doesn't work but cannot figure out why
 # from trulens_eval.feedback.provider import LiteLLM
 # provider = LiteLLM(
-#     model_engine=f"ollama/llama3", 
-#     endpoint="http://localhost:11435"
+#     model_engine=f"ollama/{model}", 
+#     endpoint=base_url
 # )
 
 # select context to be used in feedback. the location of context is app specific.
