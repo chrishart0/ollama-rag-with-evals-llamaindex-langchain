@@ -258,3 +258,4 @@ qdrant_data/meta.json
 .sqlite
 .streamlit
 default.sqlite
+.env
