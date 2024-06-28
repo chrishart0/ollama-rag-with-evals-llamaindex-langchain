@@ -94,6 +94,14 @@ import numpy as np
 # Initialize provider class
 provider = OpenAI()
 
+# Use ollama to run evals with locally hosted llama3 model
+# NOTE: This doesn't work but cannot figure out why
+# from trulens_eval.feedback.provider import LiteLLM
+# provider = LiteLLM(
+#     model_engine=f"ollama/llama3", 
+#     endpoint="http://localhost:11435"
+# )
+
 # select context to be used in feedback. the location of context is app specific.
 from trulens_eval.app import App
 context = App.select_context(naive_query_engine)
@@ -141,7 +149,7 @@ def execute_eval_run(run_name, number_of_runs=1):
                 print (f"Run {i+1} for question: {question}")
                 naive_query_engine.query(question) 
 
-execute_eval_run(f"{model}_naive_run", 3)
+execute_eval_run(f"{model}_naive_run_ollama_evalTha", 1)
 
 records, feedback = tru.get_records_and_feedback(app_ids=[])
 
